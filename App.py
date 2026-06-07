@@ -2,17 +2,16 @@ import streamlit as st
 import pandas as pd
 from collections import Counter
 import random
-import plotly.express as px
 from datetime import datetime
 import itertools
 
 st.set_page_config(page_title="Primitiva Elite", layout="wide")
-st.title("🎰 Primitiva Elite - Generador de 2 Combinaciones Óptimas")
-st.markdown("**Análisis avanzado de +15 años** • Máxima probabilidad estadística")
+st.title("🎰 Primitiva Elite - 2 Combinaciones Óptimas")
+st.markdown("**Análisis avanzado +15 años** • Sin dependencias extra")
 
 @st.cache_data(ttl=3600)
 def load_data():
-    with st.spinner("📥 Cargando histórico..."):
+    with st.spinner("📥 Cargando histórico completo..."):
         try:
             url1 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTov1BuA0nkVGTS48arpPFkc9cG7B40Xi3BfY6iqcWTrMwCBg5b50-WwvnvaR6mxvFHbDBtYFKg5IsJ/pub?gid=0&single=true&output=csv"
             url2 = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTov1BuA0nkVGTS48arpPFkc9cG7B40Xi3BfY6iqcWTrMwCBg5b50-WwvnvaR6mxvFHbDBtYFKg5IsJ/pub?gid=1&single=true&output=csv"
@@ -20,7 +19,7 @@ def load_data():
             st.success(f"✅ {len(df):,} sorteos cargados")
             return df
         except:
-            st.error("Error al cargar datos. Revisa conexión.")
+            st.error("Error al cargar datos. Revisa tu conexión.")
             return None
 
 df = load_data()
@@ -50,37 +49,35 @@ if df is not None:
     freq = Counter(all_nums)
     total = len(recent)
 
-    # Gráficos y estadísticas
     st.subheader("📊 Estadísticas clave")
     col_g1, col_g2 = st.columns(2)
     
     with col_g1:
-        freq_df = pd.DataFrame(freq.most_common(20), columns=["Número", "Apariciones"])
-        fig = px.bar(freq_df, x="Número", y="Apariciones", title="Top 20 números más frecuentes")
-        st.plotly_chart(fig, use_container_width=True)
-
-    with col_g2:
-        st.write("**🔥 Top 10 números Hot**")
-        for n, c in freq.most_common(10):
+        st.write("**🏆 Top 15 números más frecuentes**")
+        for n, c in freq.most_common(15):
             st.write(f"{n:2d} → {c} veces ({c/total*100:.1f}%)")
+    
+    with col_g2:
+        st.write("**❄️ Top 10 menos frecuentes**")
+        for n, c in freq.most_common()[-10:]:
+            st.write(f"{n:2d} → {c} veces")
 
-    # Generador de 2 combinaciones élite
+    # Generador élite
     def generate_elite_combo(freq, strategy):
         hot = [n for n, _ in freq.most_common(30)]
         cold = [n for n, _ in freq.most_common()[-20:]]
         
-        for _ in range(300):  # Más intentos para cumplir filtros
+        for _ in range(300):
             if strategy == "Mixed Hot+Cold":
                 combo = sorted(random.sample(hot[:22], 4) + random.sample(cold, 2))
             else:
-                combo = sorted(random.sample(list(range(1,50)), 6))
+                combo = sorted(random.sample(range(1,50), 6))
             
             odds = sum(1 for x in combo if x % 2 == 1)
             lows = sum(1 for x in combo if x <= 25)
             s = sum(combo)
             decades = len(set(x//10 for x in combo))
             
-            # Filtros estrictos basados en estadísticas reales
             if (odds in [3, 4] and 
                 lows in [2, 3, 4] and 
                 120 <= s <= 185 and 
@@ -88,7 +85,6 @@ if df is not None:
                 max(combo) - min(combo) >= 18 and
                 not any(abs(combo[i]-combo[i+1]) == 1 for i in range(5))):
                 return combo, random.randint(0, 9), s, odds
-        # Fallback seguro
         return sorted(random.sample(hot, 6)), random.randint(0, 9), sum(hot[:6]), 3
 
     if st.button("🎯 GENERAR MIS 2 MEJORES COMBINACIONES", type="primary", use_container_width=True):
@@ -99,8 +95,8 @@ if df is not None:
             st.success(f"""
             **Combinación {i+1}**  
             **{combo}** + **Reintegro: {reintegro}**  
-            Suma: **{suma}** | Impares: **{impares}/6** | Decenas: variadas
+            Suma: **{suma}** | Impares: **{impares}/6**
             """)
 
-    st.info("💡 Estas combinaciones cumplen los patrones más repetidos históricamente: balance par/impar, bajo/alto, suma óptima y sin consecutivos.")
-    st.caption("Datos de fuentes públicas • Juega con responsabilidad")
+    st.info("💡 Estas combinaciones están filtradas por los patrones más comunes en la historia de La Primitiva.")
+    st.caption("Juega con responsabilidad • Datos públicos")
